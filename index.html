@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MenstruAI Analyzer</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #ffe6f0, #e0f7ff);
+      color: #333;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      min-height: 100vh;
+      padding: 1rem;
+    }
+
+    h1 {
+      font-size: 2.8rem;
+      margin-bottom: 0.5rem;
+      color: #7d3c98;
+      text-align: center;
+      text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    p {
+      text-align: center;
+      max-width: 600px;
+      font-size: 1.1rem;
+      margin-bottom: 2rem;
+      color: #5d5d5d;
+    }
+
+    .container {
+      background: white;
+      border-radius: 25px;
+      padding: 2rem;
+      max-width: 600px;
+      width: 100%;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      transition: transform 0.3s ease-in-out;
+      margin-bottom: 1.5rem;
+    }
+
+    .container:hover {
+      transform: translateY(-5px);
+    }
+
+    input[type="file"] {
+      margin: 1rem 0;
+      padding: 0.5rem;
+      background: #f7f7f7;
+      border-radius: 10px;
+      border: 1px solid #ddd;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    .button {
+      background: linear-gradient(135deg, #8e44ad, #c06cd6);
+      color: white;
+      padding: 0.9rem 1.8rem;
+      border: none;
+      border-radius: 30px;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: background 0.3s, transform 0.2s;
+      margin-top: 1rem;
+    }
+
+    .button:hover {
+      background: linear-gradient(135deg, #732d91, #a64dbd);
+      transform: scale(1.05);
+    }
+
+    #result {
+      margin-top: 1.5rem;
+      font-size: 1.1rem;
+      padding: 1.2rem;
+      background: linear-gradient(135deg, #f3e9fb, #e9e1f8);
+      border-radius: 15px;
+      display: none;
+      text-align: left;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      color: #4a235a;
+      animation: fadeIn 0.6s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Biomarker Table Styling */
+    .biomarker-table {
+      width: 100%;
+      max-width: 600px;
+      border-collapse: collapse;
+      margin-top: 1rem;
+      background: white;
+      border-radius: 15px;
+      overflow: hidden;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    .biomarker-table th, .biomarker-table td {
+      padding: 1rem;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .biomarker-table th {
+      background: #8e44ad;
+      color: white;
+      font-weight: 600;
+      font-size: 1rem;
+    }
+
+    .color-box {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      margin-right: 10px;
+      vertical-align: middle;
+    }
+
+    .red { background: #e74c3c; }
+    .pink { background: #ff69b4; }
+    .purple { background: #9b59b6; }
+
+    .biomarker-table tr:last-child td {
+      border-bottom: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>MenstruAI Analyzer</h1>
+  <p>Upload your test strip image. Our AI will analyze the dominant color and provide accurate health insights.</p>
+
+  <div class="container">
+    <input type="file" id="imageInput" accept="image/*"><br>
+    <button class="button" onclick="analyzeImage()">Analyze</button>
+    <canvas id="canvas" style="display:none;"></canvas>
+    <div id="result"></div>
+  </div>
+
+  <!-- Biomarker Table -->
+  <table class="biomarker-table">
+    <thead>
+      <tr>
+        <th>Strip Color</th>
+        <th>Possible Biomarkers / Condition</th>
+        <th>Precautions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="color-box red"></span>Red</td>
+        <td>Healthy baseline markers, normal hormonal levels</td>
+        <td>Maintain healthy diet & lifestyle</td>
+      </tr>
+      <tr>
+        <td><span class="color-box pink"></span>Pink</td>
+        <td>Possible cervical abnormalities, HPV markers</td>
+        <td>Consult gynecologist, consider Pap/HPV test</td>
+      </tr>
+      <tr>
+        <td><span class="color-box purple"></span>Purple</td>
+        <td>Possible PCOD or hormonal imbalance markers</td>
+        <td>Manage stress, eat balanced diet, visit specialist</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <script>
+    const imageInput = document.getElementById('imageInput');
+    const resultDiv = document.getElementById('result');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+    function analyzeImage() {
+      const file = imageInput.files[0];
+      if (!file) {
+        alert('Please upload an image first!');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        const img = new Image();
+        img.crossOrigin = 'Anonymous';
+        img.src = event.target.result;
+
+        img.onload = function() {
+          canvas.width = img.width;
+          canvas.height = img.height;
+          ctx.drawImage(img, 0, 0);
+
+          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const data = imageData.data;
+          let r = 0, g = 0, b = 0, count = 0;
+
+          for (let i = 0; i < data.length; i += 4) {
+            r += data[i];
+            g += data[i + 1];
+            b += data[i + 2];
+            count++;
+          }
+
+          r = r / count;
+          g = g / count;
+          b = b / count;
+
+          let colorDetected = '';
+          let diagnosis = '';
+
+          if (r > g + 40 && r > b + 40) {
+            if (r > 150 && g < 100 && b < 100) {
+              colorDetected = 'Red';
+              diagnosis = `<b>Status:</b> Healthy!<br><b>Precautions:</b> Maintain balanced diet, exercise, and regular check-ups.`;
+            } else if (r > 180 && g > 100 && b > 120) {
+              colorDetected = 'Pink';
+              diagnosis = `<b>Issue:</b> Possible cervical abnormalities.<br><b>Precautions:</b> Consult a gynecologist and get HPV or Pap tests.`;
+            } else {
+              colorDetected = 'Purple';
+              diagnosis = `<b>Issue:</b> Possible PCOD (Polycystic Ovarian Disease).<br><b>Precautions:</b> Manage stress, eat healthy, and visit a specialist.`;
+            }
+          } else if (r > b && r > g) {
+            colorDetected = 'Pink';
+            diagnosis = `<b>Issue:</b> Possible cervical abnormalities.<br><b>Precautions:</b> Consult a gynecologist and take tests.`;
+          } else {
+            colorDetected = 'Purple';
+            diagnosis = `<b>Issue:</b> Possible PCOD (Polycystic Ovarian Disease).<br><b>Precautions:</b> Maintain healthy habits and seek medical advice.`;
+          }
+
+          resultDiv.style.display = 'block';
+          resultDiv.innerHTML = `<b>Detected Color:</b> ${colorDetected}<br>${diagnosis}`;
+        };
+      };
+      reader.readAsDataURL(file);
+    }
+  </script>
+</body>
+</html>
