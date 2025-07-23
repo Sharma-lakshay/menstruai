@@ -220,23 +220,21 @@
           let colorDetected = '';
           let diagnosis = '';
 
-          if (r > g + 40 && r > b + 40) {
-            if (r > 150 && g < 100 && b < 100) {
-              colorDetected = 'Red';
-              diagnosis = `<b>Status:</b> Healthy!<br><b>Precautions:</b> Maintain balanced diet, exercise, and regular check-ups.`;
-            } else if (r > 180 && g > 100 && b > 120) {
-              colorDetected = 'Pink';
-              diagnosis = `<b>Issue:</b> Possible cervical abnormalities.<br><b>Precautions:</b> Consult a gynecologist and get HPV or Pap tests.`;
-            } else {
-              colorDetected = 'Purple';
-              diagnosis = `<b>Issue:</b> Possible PCOD (Polycystic Ovarian Disease).<br><b>Precautions:</b> Manage stress, eat healthy, and visit a specialist.`;
-            }
-          } else if (r > b && r > g) {
+          if (r > 150 && r > g + 40 && r > b + 40 && g < 100 && b < 100) {
+            colorDetected = 'Red';
+            diagnosis = `<b>Status:</b> Healthy!<br><b>Precautions:</b> Maintain balanced diet, exercise, and regular check-ups.`;
+          } 
+          else if (r > 180 && g > 100 && b > 120) {
             colorDetected = 'Pink';
-            diagnosis = `<b>Issue:</b> Possible cervical abnormalities.<br><b>Precautions:</b> Consult a gynecologist and take tests.`;
-          } else {
+            diagnosis = `<b>Issue:</b> Possible cervical abnormalities.<br><b>Precautions:</b> Consult a gynecologist and get HPV or Pap tests.`;
+          } 
+          else if (r > 100 && b > 100 && (b - r) < 40) {
             colorDetected = 'Purple';
-            diagnosis = `<b>Issue:</b> Possible PCOD (Polycystic Ovarian Disease).<br><b>Precautions:</b> Maintain healthy habits and seek medical advice.`;
+            diagnosis = `<b>Issue:</b> Possible PCOD (Polycystic Ovarian Disease).<br><b>Precautions:</b> Manage stress, eat healthy, and visit a specialist.`;
+          } 
+          else {
+            colorDetected = 'Invalid Sample';
+            diagnosis = `The uploaded sample does not match any known strip color. Please retake the test with a clear strip photo.`;
           }
 
           resultDiv.style.display = 'block';
